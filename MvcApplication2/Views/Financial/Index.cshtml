@@ -1,0 +1,273 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<script src="~/Scripts/angular.min.js"></script>
+<script src="~/Scripts/jquery-1.9.1.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<link href="~/Scripts/boostrap.min.css" rel="stylesheet" />
+<script src="~/Scripts/commanAngularScript.js"></script>
+<script>
+    
+    Account.filter('lastTwochar', function () {
+        return function (item) {
+            if (item.length > 2) {
+                return item.toString().substring(item.length - 2).toUpperCase();
+            }
+            else
+                return item;
+
+        };
+
+    });
+    
+    Account.directive('numericOnly', function () {
+        return {
+            require: 'ngModel',
+            link: function (scope, element, attrs, modelCtrl) {
+                
+                modelCtrl.$parsers.push(function (inputValue) {
+                    
+                    var transformedInput = inputValue ? inputValue.replace(/[^\d.-]/g, '') : null;
+                    
+                    if (transformedInput != inputValue) {
+                        modelCtrl.$setViewValue(transformedInput);
+                        modelCtrl.$render();
+                    }
+
+                    return transformedInput;
+                });
+            }
+        };
+    });
+
+    Account.directive('capital', function () {
+        return {
+            require: 'ngModel',
+            link: function (scope, element, attrs, modelCtrl) {
+
+                modelCtrl.$parsers.push(function (inputValue) {
+                    
+                    var transformedInput = inputValue.toUpperCase();
+                    
+                    if (transformedInput != inputValue) {
+                        modelCtrl.$setViewValue(transformedInput);
+                        modelCtrl.$render();
+                    }
+
+                    return transformedInput;
+                });
+            }
+        };
+    });
+
+    Account.directive("notifiCation", function () {
+        return {
+            restrict: 'E',
+            scope: {
+                text: '='
+            },
+            template: '<h1>{{text}}</h1>'
+        }
+    });
+
+    Account.directive("bookComment", function () {
+        return {
+            restrict: 'E',
+            scope: {
+                text: '='
+            },
+            template: '<input type="text" ng-model="text"/>'
+        }
+    });
+    Account.directive('myDialog', function () {
+        return {
+            restrict : 'E',
+            transclude: true,
+           
+            template: " <div class='myDialog' ng-transclude></div>    <br/>   <Button type=button ng-click='Create()' class='btn btn-primary'>Test</Button>"
+        };
+
+    });
+        
+
+    Account.controller('CR', function ($scope, $http)
+    {
+        $scope.test = "vishal";
+        $scope.Create=function()
+        {
+          //  location.href = $scope.urlNext;
+
+            location.href = '/Financial/Create?Id=0';
+
+        }
+        $scope.Edit = function (TransMain)
+        {
+            location.href = '/Financial/Create?Id=' + TransMain.TransMainId;
+
+        }
+        $scope.Delete = function (TransMain)
+        {
+            
+            var Params = { id: TransMain.TransMainId };
+            
+            var response = UrlData($http, 'Jv/Delete', 'post', Params, null);
+            response.then(function (d) {
+                location.href = '/Financial';
+
+            },
+            function (d1) {
+
+                alert('Error');
+            }
+            );
+            
+        }
+
+        var response = UrlData($http, 'Financial/GetData', 'post', null, null);
+        response.then(function(responseData)
+        {
+            
+            $scope.TransMains = responseData.data;
+            
+            $scope.columns = {};
+            if (Array.isArray($scope.TransMains)) {
+                var obj = $scope.TransMains[0];
+
+                var keys = [];
+                for (var key in obj)
+                    keys.push(key);
+
+                $scope.columns = keys;
+
+            }
+            else {
+
+                var obj = $scope.TransMains;
+            }
+
+            $scope.index = 0;
+            $scope.tables = [];
+            
+            $scope.tables.push({ rows: responseData.data, cols: Object.keys(responseData.data[0]) });
+            
+            $scope.tables[0].types = [];
+            for (var index=0; index < $scope.tables[0].cols.length; index++)
+            {
+                var row = $scope.tables[0].rows[0];
+                
+                if (row[$scope.tables[0].cols[index]].toString().substr(0, 6) == '/Date(') {
+
+                    $scope.tables[0].types[index]='Date'
+                }
+                else {
+                    $scope.tables[0].types[index] = typeof row[$scope.tables[0].cols[index]]
+                }
+                
+            }
+            
+            var column = {
+                field: '',
+                Caption: '',
+                Visible: true,
+                Sort: true,
+                Index: -1,
+            };
+
+            debugger;;
+        },
+        function(responsedata)
+            {
+            alert('error');
+
+        });
+        
+    });
+</script>
+
+<body>
+    
+        <div class="container" ng-app="Account" ng-controller="CR">
+            <div>
+                <input type="text" ng-model="urlNext" numeric-only />
+                <my-dialog data="abc" condata="xyz"  >Are sure Delete Record(yes/No)?</my-dialog>
+                <input type="text" ng-model="urlnext" capital  />
+
+                <notifi-cation text="test"></notifi-cation>
+                <span>This is the textbox on the page</span>
+                <input type="text" ng-model="commentText" />
+                <br />
+                <span>This is the textbox on the directive</span>
+                <book-comment text="commentText"></book-comment>
+            </div>
+            <div>
+
+                <input type="button" class="w3-btn w3-green w3-ripple"  value="CR" ng-click="Create()" />
+            </div>
+            <div>
+            
+            </div>
+            <div>
+                <table>
+                    <tr>
+                        <td ng-repeat="col in columns">
+                            {{col   }}
+                        </td>
+                        
+                        <td></td>
+                    </tr>
+                    <tr ng-repeat="TransMain in  TransMains">
+                        <td  ng-repeat="col in columns">
+                            {{TransMain [col]  }}
+                        </td>
+                        <td>{{ TransMain.TransMainId }}</td>
+                        <td>  {{TransMain.BillNo}}</td>
+                        <td>{{TransMain.BillDate}}</td>
+                        <td>{{TransMain[BillNo]}}</td>
+                        <td><input type="button" value="Edit" ng-click="Edit(TransMain)" /> </td>
+                        <td><input type="button" value="Delete" ng-click="Delete(TransMain)" /> </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <div class="table table-responsive">
+                    <table border="1" ng-repeat="table in tables" class="table table-bordered">
+                        <tr >
+                            <th ng-repeat="column in table.cols">
+                                <div ng-if="(column | lastTwochar) !='ID'">
+
+                                    {{column}}
+                                </div>
+                            </th>
+                                            
+                            
+                        </tr>
+                        <tr ng-repeat="row in table.rows">
+
+                            <td ng-repeat="column in table.cols">
+                                
+                                <div ng-if="table.types[$index]=='Date'">
+                                    {{row[column] | dateFilter | date :'dd-MMM-yyyy'}}
+                                </div>
+                                <div ng-if="table.types[$index]=='number'">
+
+                                    <div ng-if="(column | lastTwochar) !='ID'">
+                                        {{row[column]}}
+                                    </div>
+                                    
+                                </div>
+                                <div ng-if="table.types[$index]=='string'">
+                                    {{row[column]}}
+                                </div>
+
+
+
+                            </td>
+                            <td><input type="button" value="Edit" ng-click="Edit(TransMain)" /> </td>
+                            <td><input type="button" value="Delete" ng-click="Delete(TransMain)" /> </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+</body>

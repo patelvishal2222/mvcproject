@@ -1,0 +1,147 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<style type="text/css">
+    .friends {
+        border-collapse: collapse;
+    }
+
+        .friends th {
+            border-bottom: 1px solid;
+        }
+
+        .friends td, .friends th {
+            border-left: 1px solid;
+            padding: 5px 10px;
+        }
+
+            .friends td:first-child, .friends th:first-child {
+                border-left: none;
+            }
+
+    .sortorder:after {
+        content: '\25b2';
+        // BLACK UP-POINTING TRIANGLE;
+    }
+
+    .sortorder.reverse:after {
+        content: '\25bc';
+        // BLACK DOWN-POINTING TRIANGLE;
+    }
+</style>
+<script>
+    var mainApp = angular.module('mainApp', []);
+    function test()
+    {
+        alert('test');
+    }
+
+    function UrlData($http,Url, Method, Params, Data) {
+
+        //url start
+        var response = $http({
+            url: Url,
+            method: Method,
+            params: Params,
+            data: Data,
+        })
+        return response;
+
+
+    }
+
+
+    mainApp.controller('jvController', function ($scope, $http) {
+        $scope.AccountMasters = {};
+        $scope.AddAccount=function ()
+        {
+
+            location.href = '/Jv/Create?Id=0';
+
+        }
+
+
+        $scope.DeleteAccount = function (TransMain) {
+
+            var strconfirm = confirm("Are you sure you want to delete?");
+            if (strconfirm == true) {
+                var Params = { id: TransMain.TransMainId };
+                UrlData($http,'http://localhost:51579/Jv/Delete', 'post', Params, null);
+                location.href = '/Jv/Index';
+
+
+            }
+
+        }
+        $scope.EditAccount = function (TransMain) {
+            location.href = '/Jv/Create?Id=' + TransMain.TransMainId;
+
+        }
+
+        var response = UrlData($http,'http://localhost:51579/Jv/GetAll', 'post', null, null);
+            response.then(function (response) {
+                $scope.TransMains = response.data;
+            },
+            function (response) {
+            alert('error');
+            });
+
+            $scope.propertyName = 'BillNo';
+            $scope.reverse = true;
+
+
+            $scope.sortBy = function (propertyName) {
+                $scope.reverse = ($scope.propertyName === propertyName) ? !$scope.reverse : false;
+                $scope.propertyName = propertyName;
+            };
+
+    });
+
+</script>
+<h2>Account Display</h2>
+
+<body>
+    <div class="container" ng-app="mainApp" ng-controller="jvController">
+        <div class="row">
+            <input type="button" class="btnAdd" value=" Add JV" ng-click="AddAccount()" />
+            <label>Search: <input ng-model="search"></label>
+            <div class="table table-responsive">
+                <table class="table table-bordered">
+                    <tr style="background-color:#428bca">
+
+                        <th>
+                            <button ng-click="sortBy('TransMainId')">TransMainId</button>
+                            <span class="sortorder" ng-show="propertyName === 'TransMainId'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th>
+                            <button ng-click="sortBy('AccountName')">BillNo</button>
+                            <span class="sortorder" ng-show="propertyName === 'BillNo'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th>
+                            <button ng-click="sortBy('BillDate')">Bill Date</button>
+                            <span class="sortorder" ng-show="propertyName === 'BillDate'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th>
+                            <button ng-click="sortBy('Rermaks')">Rermaks</button>
+                            <span class="sortorder" ng-show="propertyName === 'Remarks'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    <tr ng-repeat="TransMain in  TransMains| filter:search |orderBy :propertyName:reverse">
+                        <td>{{TransMain.TransMainId}}</td>
+                        <td>{{TransMain.BillNo}}</td>
+                        <td>{{TransMain.BillDate}}</td>
+                        <td>{{TransMain.Remarks}}</td>
+                        <td><button ng-click="EditAccount(TransMain)">Edit</button></td>
+                        <td><button ng-click="DeleteAccount(TransMain)">Delete</button></td>
+                    </tr>
+
+                </table>
+            </div>
+        </div>
+    </div>
+</body>

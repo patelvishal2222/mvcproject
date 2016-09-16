@@ -1,0 +1,437 @@
+﻿@{
+    ViewBag.Title = "Sales Inoice";
+}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script src="~/Scripts/angular.min.js"></script>
+<script src="~/Scripts/bootstrap-datepicker.js"></script>
+
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link href="~/Css/datepicker.css" rel="stylesheet" />
+<script>
+    
+    var project = angular.module('project', []);
+
+    function UrlData($http, Url, Method, Params, Data) {
+
+        //url start
+        var response = $http({
+            url: Url,
+            method: Method,
+            params: Params,
+            data: Data,
+        })
+        return response;
+
+
+    }
+
+
+    project.directive('chintan', function () {
+
+
+        return function (scope, element, attrs) {
+            element.datepicker({
+                inline: true,
+
+                onSelect: function (dateText) {
+                    var modelPath = $(this).attr('ng-model');
+                    putObject(modelPath, scope, dateText);
+                    scope.$apply();
+                }
+            });
+        }
+    })
+
+    project.directive('allowPattern', [allowPatternDirective]);
+
+    function allowPatternDirective() {
+        return {
+            restrict: "A",
+            compile: function (tElement, tAttrs) {
+                return function (scope, element, attrs) {
+                    element.bind("keypress", function (event) {
+                        var keyCode = event.which || event.keyCode; // I safely get the 
+                        if (!keyCodeChar.match(new RegExp(attrs.allowPattern, "i"))) {
+                            event.preventDefault();
+                            return false;
+                        }
+                    });
+                };
+            }
+        };
+    }
+
+
+    project.directive('myDirective', function () {
+        return {
+            require: 'ngModel',
+            link: function (scope, element, attr, mCtrl) {
+                function myValidation(value) {
+                    if (value.indexOf("e") > -1) {
+                        mCtrl.$setValidity('charE', true);
+                    } else {
+                        mCtrl.$setValidity('charE', false);
+                    }
+                    return value;
+                }
+                mCtrl.$parsers.push(myValidation);
+            }
+        };
+    })
+    project.controller('sales', function ($scope, $location, $http) {
+ //Variable
+         
+            
+            
+            
+            $scope.Item = {
+                Srno: 0,
+                ItemName: '',
+                ItemMasterId: 0,
+                Qty: 0,
+                Rate: 0.0,
+                UnitName: "Nos",
+                Total: 0.0,
+                ItemMaster: { ItemName: '', ItemMasterId: 0 }
+
+            };
+//command Function
+        
+
+        $scope.GetItemsIndex=function()
+        {
+           
+            
+
+            if ($scope.Sales.Transcation == null || $scope.Sales.Transcation.length == 0) {
+                $scope.Sales.Transcation = [{ Srno: 1, CrDrMasterId: 1, AccountMasterId: 1, Amount: 0 },
+                             { Srno: 2, CrDrMasterId: 2, AccountMasterId: 19, Amount: 0,TransDetails: []
+                             }];
+                $scope.Sales.Accountndex = 0;
+                $scope.Sales.ItemIndex = 1;
+            }
+            else {
+                for (var i = 0; i < $scope.Sales.Transcation.length; i++) {
+                    if ($scope.Sales.Transcation[i].TransDetails == null) {
+
+                    }
+                    else
+
+                        if ($scope.Sales.Transcation[i].TransDetails.length > 0) {
+                            $scope.Sales.ItemIndex = i;
+                            $scope.Sales.Accountndex = Math.abs(1 - i);
+                            
+                        }
+
+
+
+                }
+            }
+            return $scope.Sales.ItemIndex;
+        }
+
+        $scope.Total= function () {
+            var total = 0;
+            for (var i = 0; i < $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails.length; i++) {
+                total = total + $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails[i].Total;
+            }
+            return total;
+        }
+          //addItem
+            $scope.addItem=function ()
+            {
+                
+                $scope.Item = {};
+                $scope.Item.Srno = 0;
+                $scope.Item.UnitName = 'Nos';
+            }
+        //editItem
+            $scope.editItem =function (Transcation)
+            {
+                $scope.Item = {};
+                //$scope.Item.Srno = Transcation.Srno;
+                //$scope.Item.ItemMasterId = Transcation.ItemMasterId;
+                //$scope.Item.ItemName = Transcation.ItemName;
+                //$scope.Item.Qty = Transcation.Qty;
+                //$scope.Item.Rate = Transcation.Rate;
+                $scope.Item = angular.copy(Transcation);
+                $scope.Item.ItemMaster = {};
+                $scope.Item.ItemMaster = angular.copy(Transcation.ItemMaster);
+                //$scope.Item.ItemMaster.ItemName = Transcation.ItemMaster.ItemName;
+                //$scope.Item.ItemMaster.ItemMasterId = Transcation.ItemMasterId;
+                
+
+            }
+        //SaveItem
+            $scope.SaveItem=function ()
+            {
+
+                
+                $scope.Item.Total = $scope.Item.Qty * $scope.Item.Rate;
+                $scope.Item.UnitName = 'Nos';
+                if ($scope.Item.Srno == 0 || $scope.Item.Srno == null) {
+                    $scope.Item.Srno = $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails.length + 1;
+                    
+
+                    $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails.push($scope.Item);
+                }
+                else {
+                    
+                    $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails[$scope.Item.Srno - 1] = $scope.Item;
+                }
+                
+                $scope.Item = {};
+
+            }
+        //onCategoryChange
+            $scope.onCategoryChange = function () {
+                $scope.Item.ItemMasterId = $scope.Item.ItemMaster.ItemMasterId;
+                if ($scope.Item.Srno==0)
+                $scope.Item.Rate = $scope.Item.ItemMaster.SalesRate;
+            };
+        //Validation
+            $scope.Validation=function()
+            {
+             
+                if (!$scope.salesform.$valid)
+                {
+                    
+
+                    return false;
+                }
+                if ($scope.Total() == 0)
+                {
+                    $scope.spanAmount = true;
+                    return false;
+                }
+                $scope.spanAmount = false;
+                return true;
+            }
+        //SaveData()
+            $scope.SaveData = function () {
+                
+                
+                if ($scope.Validation()) {
+                    $scope.Sales.Transcation[0].Amount = $scope.Total();
+                    $scope.Sales.Transcation[1].Amount = $scope.Sales.Transcation[0].Amount;
+                  
+                    var Data = JSON.stringify($scope.Sales);
+
+                    var response = UrlData($http, '/Jv/Save', 'post', null, Data);
+                    response.then(function (response) {
+                        location.href = '/Sales';
+                    },
+                         function (response) {
+                             alert('error');
+                         });
+                }
+            }
+           //CacelData
+            $scope.CancelData = function () {
+                location.href = '/Sales';
+                
+            }
+            //DeleteData
+            $scope.DeleteData = function (index) {
+                $scope.index = index;
+            }
+            $scope.comfirmDeleteData = function () {
+                $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails.splice($scope.index, 1);
+                for (; $scope.index < $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails.length; $scope.index++)
+                {   
+                    $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails[$scope.index].Srno = $scope.index + 1;
+                }
+            }
+
+//HTTP function
+        //ItemMasters
+            var response2 = UrlData($http, '/Sales/GetAllItem', 'post', null, null);
+            response2.then(function (response) {
+                $scope.ItemMasters = response.data;
+            },
+           function (response) {
+               alert('error');
+           });
+            //AccountMasters
+            var response2 = UrlData($http, '/Account/GetAll', 'post', null, null);
+            response2.then(function (response) {
+                $scope.AccountMasters = response.data;
+            },
+           function (response) {
+               alert('error');
+           });
+        //GetData
+            $scope.spanAmount = false;
+
+            var parmeter = $location.absUrl().split('?')[1];
+            var hash;
+            var hashes = parmeter.split('&');
+            for (var i = 0; i < hashes.length; i++) {
+                hash = hashes[i].split('=');
+                window[hash[0]] = hash[1];
+
+            }
+            var Params = { id: Id };
+            var response = UrlData($http, '/Jv/GetData', 'post', Params, null);
+            response.then(function (response) {
+                
+                $scope.Sales = response.data;
+                
+                $scope.GetItemsIndex();
+                $scope.Sales.TypeMasterId = 2;
+                for ($scope.index = 0; $scope.index < $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails.length; $scope.index++) {
+
+                    $scope.Sales.Transcation[$scope.Sales.ItemIndex].TransDetails[$scope.index].Srno = $scope.index + 1;
+                    
+                }
+
+            },
+        function (response) {
+            alert('error');
+        });
+	
+            
+    
+    });
+</script>
+
+<body>
+    <div class="container" ng-app="project" ng-controller="sales">
+        <form name="salesform" ng-submit="SaveData()" novalidate>
+            <div class="form-group">
+                <label> Bill NO </label>
+                <input name="BillNo" type="text" placeholder="Bill No" ng-model="Sales.BillNo" required  />
+
+                <div ng-show="salesform.$submitted || salesform.BillNo.$touched">
+                    <div ng-show="salesform.BillNo.$error.required">Bill No is required.</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label> Bill Date </label>
+                <input type="text" name="BillDate" placeholder="Bill Date" ng-model="Sales.BillDate" required chintan />
+                <span ng-show="salesform.BillDate.$dirty  && salesform.BillDate.$error.required" class="help-block"></span>
+                <div ng-show="salesform.$submitted || salesform.BillDate.$touched">
+                    <div ng-show="salesform.BillDate.$error.required">Bill Date is required.</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Party Name</label>
+
+                <select name="AccountMasterId"
+                        class="form-control"
+                        ng-dropdown required
+                        data-ng-model="Sales.Transcation[Sales.Accountndex].AccountMasterId"
+                        ng-options="AccountMaster.AccountMasterId as AccountMaster.AccountName for AccountMaster in AccountMasters">
+                    class="form-control">
+
+                </select>
+
+            </div>
+
+            <div>
+                <input type="Button" value="Add" data-toggle="modal" data-target="#myModal" ng-click="addItem()" />
+            </div>
+            <div class="modal" id="confirmModal" style="display: none; z-index: 1050;">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-body" id="confirmMessage">
+                            Are Sure Delete Record ?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal" id="confirmOk" ng-click="comfirmDeleteData()">Yes</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal" id="confirmCancel">No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal" id="myModal" style="display: none; z-index: 1050;">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Item Details</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>
+                                    ItemName
+                                </label>
+
+                                <select name="GroupMasterId" class="form-control" ng-dropdown 
+                                        ng-model="Item.ItemMaster"
+                                        ng-options="y.ItemName for (x, y) in ItemMasters track by y.ItemMasterId"
+                                        ng-change="onCategoryChange()"></select>
+
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    Quantity
+                                </label>
+                                <input type="Number" ng-model="Item.Qty" placeholder="Quntity" min="0" max="1000" />
+                            </div>
+                            <div class="form-group">
+                                <label>Rate</label>
+                                <input type="text" ng-model="Item.Rate" placeholder="Rate" min="0" />
+
+                            </div>
+                            <div>
+                                <label>Total</label>
+                                <div> {{Item.Qty*Item.Rate |number:2}}</div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal" id="save" ng-click="SaveItem()">Add</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal" id="Cancel">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+
+                <table class="table table-bordered">
+                    <tr>
+                        <th>SrNo</th>
+                        <th ng-hide="true">ItemMasterId</th>
+                        <th>ItemName</th>
+                        <th>Qty</th>
+                        <th>Unit</th>
+                        <th>Rate</th>
+                        <th>Total</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+
+                    <tr ng-repeat="tran in Sales.Transcation[Sales.ItemIndex].TransDetails">
+                        <td> {{tran.Srno}}</td>
+                        <td ng-hide="true"> {{tran.ItemMasterId}}</td>
+                        <td> {{tran.ItemMaster.ItemName}}</td>
+                        <td> {{tran.Qty}}</td>
+                        <td> {{tran.UnitName}}</td>
+                        <td> {{tran.Rate| number:2 }}</td>
+                        <td> {{tran.Total | number:2}}</td>
+                        <td><input type=button value=Edit ng-click="editItem(tran)" data-toggle="modal" data-target="#myModal" /></td>
+                        <td><input type=button value=Delete ng-click="DeleteData($index)" data-toggle="modal" data-target="#confirmModal"  /></td>
+
+                    </tr>
+                </table>
+
+            </div>
+            <div class="form-group">
+                <label>Total </label>
+                <input type="text" ng-model="Total()" />
+                <span id="spanAmount" ng-show="spanAmount" style="color :red ">Amount Greate than Zero </span>
+            </div>
+            <div class="form-group">
+                <label>Remarks</label>
+                <textarea rows="2" ng-model="Sales.Remarks"></textarea>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary"/>
+                <input type="button" value="Cancel" class="btn btn-danger" ng-click="CancelData()" />
+            </div>
+        </form>
+
+    </div>
+</body>

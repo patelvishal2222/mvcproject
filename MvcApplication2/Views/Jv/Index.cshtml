@@ -1,0 +1,283 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<style type="text/css">
+    .friends {
+        border-collapse: collapse;
+    }
+
+        .friends th {
+            border-bottom: 1px solid;
+        }
+
+        .friends td, .friends th {
+            border-left: 1px solid;
+            padding: 5px 10px;
+        }
+
+            .friends td:first-child, .friends th:first-child {
+                border-left: none;
+            }
+
+    .sortorder:after {
+        content: '\25b2';
+        
+    }
+
+    .sortorder.reverse:after {
+        content: '\25bc';
+         
+    }
+</style>
+<script src="~/Scripts/commanAngularScript.js"></script>
+<script>
+    Account.filter('picker', function ($filter) {
+        return function (value, filterName, options)
+        {
+            
+            //var filterName = [].splice.call(arguments, 1, 1)[0];
+            //return $filter(filterName).apply(null, arguments);
+
+
+            return $filter(filterName)(value);
+           // alert(option);
+
+        // return   $filter(filterName)(value, applyOptions(options));
+        };
+        
+
+    } );
+    Account.filter('startFrom', function () {
+        return function (input, start) {
+            start = +start; //parse to int
+            return input.slice(start);
+        }
+    });
+    Account.directive("customSort", function () {
+        return {
+            restrict: 'A',
+            transclude: true,
+            scope: {
+                order: '=',
+                sort: '='
+            },
+            template:
+              ' <a ng-click="sort_by(order)" style="color: #555555;">' +
+              '    <span ng-transclude></span>' +
+              '    <i ng-class="selectedCls(order)"></i>' +
+              '</a>',
+            link: function (scope) {
+
+                // change sorting order
+                scope.sort_by = function (newSortingOrder) {
+                    var sort = scope.sort;
+
+                    if (sort.sortingOrder == newSortingOrder) {
+                        sort.reverse = !sort.reverse;
+                    }
+
+                    sort.sortingOrder = newSortingOrder;
+                };
+
+
+                scope.selectedCls = function (column) {
+                    if (column == scope.sort.sortingOrder) {
+                        return ('icon-chevron-' + ((scope.sort.reverse) ? 'down' : 'up'));
+                    }
+                    else {
+                        return 'icon-sort'
+                    }
+                };
+            }// end link
+        }
+    });
+    Account.controller('jvController', function ($scope, $http,$q) {
+        $scope.AccountMasters = {};
+        $scope.AddAccount=function ()
+        {
+
+            location.href = '/Jv/Create?Id=0';
+
+        }
+
+
+        $scope.DeleteAccount = function (TransMain) {
+
+            var strconfirm = confirm("Are you sure you want to delete?");
+            if (strconfirm == true) {
+                var Params = { id: TransMain.TransMainId };
+                UrlData($http,'/Jv/Delete', 'post', Params, null);
+                location.href = '/Jv/Index';
+
+
+            }
+
+        }
+        $scope.EditAccount = function (TransMain) {
+            location.href = '/Jv/Create?Id=' + TransMain.TransMainId;
+
+        }
+
+        var response = UrlData($http, '/Jv/GetAll', 'post', null, null);
+            response.then(function (response) {
+                $scope.TransMains = response.data;
+                $scope.tables = [];
+                $scope.tables.push({ rows: response.data, cols: Object.keys(response.data[0]) });
+                $scope.cols = [
+                                { ColumnName: 'TransMainId', Visible: false, formate: '' },
+                                { ColumnName: 'BillNo', Visible: true ,formate:'' },
+                                { ColumnName: 'BillDate', Visible: true, formate: "dateFilter" },
+                                { ColumnName: 'Remarks', Visible: true, formate: '' }
+                                
+                ];
+                $scope.pageSize = 1;
+                $scope.currentPage = 2;
+
+            },
+            function (response) {
+            alert('error');
+            });
+
+            $scope.propertyName = 'BillNo';
+            $scope.reverse = true;
+
+
+            $scope.sortBy = function (propertyName) {
+                $scope.reverse = ($scope.propertyName === propertyName) ? !$scope.reverse : false;
+                $scope.propertyName = propertyName;
+            };
+            $scope.Print = function ()
+            {
+                //printContents = document.getElementById("PrintData").innerHTML;
+                //var popupWin = window.open('', '_blank', 'width=300,height=300');
+                //popupWin.document.open();
+                ////printContents = "This print Data";
+                //popupWin.document.write('<html><head><link rel="stylesheet" type="text/css" href="style.css" /></head><body onload="window.print()">' + printContents + '</body></html>');
+                //popupWin.document.close();
+
+                var divName = "PrintData"
+                var printContents = document.getElementById(divName).innerHTML;
+                var originalContents = document.body.innerHTML;
+
+                if (navigator.userAgent.toLowerCase().indexOf('chrome') > -1) {
+                    var popupWin = window.open('', '_blank', 'width=600,height=600,scrollbars=no,menubar=no,toolbar=no,location=no,status=no,titlebar=no');
+                    popupWin.window.focus();
+                    popupWin.document.write('<!DOCTYPE html><html><head>' +
+                        '<link rel="stylesheet" type="text/css" href="style.css" />' +
+                        '</head><body onload="window.print()"><div class="reward-body">' + printContents + '</div></html>');
+                    popupWin.onbeforeunload = function (event) {
+                        popupWin.close();
+                        return '.\n';
+                    };
+                    popupWin.onabort = function (event) {
+                        popupWin.document.close();
+                        popupWin.close();
+                    }
+                } else {
+                    var popupWin = window.open('', '_blank', 'width=800,height=600');
+                    popupWin.document.open();
+                    popupWin.document.write('<html><head><link rel="stylesheet" type="text/css" href="style.css" /></head><body onload="window.print()">' + printContents + '</html>');
+                    popupWin.document.close();
+                }
+                popupWin.document.close();
+
+                return true;
+            }
+
+            function reportPDF() {
+                var deferred = $q.defer();
+                $http.get('/api/Report').success(function (results) {
+                    window.open('/api/Report', '_self', '');
+                    deferred.resolve(results);
+                }).error(function (data, status, headers, config) {
+                    deferred.reject('Failed generate pdf');
+                });
+
+                return deferred.promise;
+            };
+            $scope.CrystalPrint = function ()
+            {
+                //reportPDF();
+                location.href = '/Report/ViewPage1.aspx';
+
+            }
+    });
+
+</script>
+<h2>Account Display</h2>
+
+<body>
+    <div class="container" ng-app="Account" ng-controller="jvController">
+        <div >
+            <input type="button" class="w3-btn w3-green w3-ripple" value=" Add JV" ng-click="AddAccount()" />
+            <label>Search: <input ng-model="search"></label>
+            <input type="button" style="right" class="w3-btn w3-green w3-ripple" value="Print" ng-click="Print()" />
+            <input type="button" style="right" class="w3-btn w3-green w3-ripple" value="CrystalPrint" ng-click="CrystalPrint()" />
+            <div id="PrintData" class="table table-responsive">
+                <table class="table table-bordered">
+                    <tr style="background-color:#428bca">
+
+                        <th>
+                            <button ng-click="sortBy('TransMainId')">TransMainId</button>
+                            <span class="sortorder" ng-show="propertyName === 'TransMainId'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th>
+                            <button ng-click="sortBy('AccountName')">BillNo</button>
+                            <span class="sortorder" ng-show="propertyName === 'BillNo'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th>
+                            <button ng-click="sortBy('BillDate')">Bill Date</button>
+                            <span class="sortorder" ng-show="propertyName === 'BillDate'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th>
+                            <button ng-click="sortBy('Remarks')">Remarks</button>
+                            <span class="sortorder" ng-show="propertyName === 'Remarks'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    <tr ng-repeat="TransMain in  TransMains| filter:search |orderBy :propertyName:reverse | startFrom:0 |limitTo:10 ">
+                        <td>{{TransMain.TransMainId}}</td>
+                        <td>{{TransMain.BillNo}}</td>
+                        <td>{{TransMain.BillDate | dateFilter |date:'dd-MMM-yyyy' }}</td>
+                        <td>{{TransMain.Remarks}}</td>
+                        <td><button ng-click="EditAccount(TransMain)">Edit</button></td>
+                        <td><button ng-click="DeleteAccount(TransMain)">Delete</button></td>
+                    </tr>
+
+                </table>
+            </div>
+            <div>
+                <div class="table table-responsive">
+                    <table border="1" ng-repeat="table in tables" class="table table-bordered">
+                        <tr>
+                            <th ng-repeat="column in cols" ng-show="{{column.Visible}}">{{column.ColumnName}}</th>
+                        </tr>
+                        <tr ng-repeat="row in table.rows">
+
+                            @*<td ng-repeat="column in table.cols">{{row[column]}}</td>*@
+                            <td ng-repeat="c in cols" ng-show="{{c.Visible}}">
+                                <div ng-if="c.formate==''">
+                                    {{row[c.ColumnName]   }}
+                                </div>
+                                <div ng-if="c.formate!=''">
+                                 {{row[c.ColumnName] | picker :c.formate }}
+                            </div>
+                                </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <at-pagination at-list="filteredList" at-config="config"></at-pagination>
+                <dir-pagination-controls max-size="5"
+                                         direction-links="true"
+                                         boundary-links="true">
+                </dir-pagination-controls>
+            </div>
+
+        </div>
+    </div>
+</body>

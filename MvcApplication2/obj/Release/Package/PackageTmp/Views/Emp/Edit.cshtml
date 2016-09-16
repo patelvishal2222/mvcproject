@@ -1,0 +1,225 @@
+﻿@model MvcApplication2.Models.Emp
+
+@{
+    ViewBag.Title = "Edit";
+}
+
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script type="text/javascript">
+    function AddPhone() {
+        var table = document.getElementById("myTable")
+        var PhoneName = document.getElementById("PhoneName");
+        var PhoneNumber = document.getElementById("PhoneNumber");
+
+        var row = table.insertRow(table.rows.length - 1);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        cell1.innerHTML = PhoneName.value;
+        cell2.innerHTML = PhoneNumber.value;
+        cell3.innerHTML = "0";
+        cell4.innerHTML = " <input type=button value=Delete onclick=DeletePhone(this) />";
+        PhoneName.value = "";
+        PhoneNumber.value = "";
+
+    }
+    function DeletePhone(row) {
+
+
+        var i = row.parentNode.parentNode.rowIndex;
+        document.getElementById('myTable').deleteRow(i)
+
+
+    }
+
+
+
+    //This function is used for sending data(JSON Data) to SalesController
+    function savedata() {
+        // Step 1: Read View Data and Create JSON Object
+
+        // Creating SalesSub Json Object
+        var phones = { "PhoneId": "", "EmpId": "", "PhoneName": "", "PhoneNumber": "" };
+
+
+        // Creating SalesMain Json Object
+        var Empmain = { "EmpId": "", "EmpName": "", "Amount": "", "ImagePath": "", "Phone": "", "Email": "", "Pass": "", "City": "", "phones": [] };
+
+        // Set Sales Main Value
+        Empmain.EmpId = $("#EmpId").val();
+        Empmain.EmpName = $("#EmpName").val();
+        Empmain.Amount = $("#Amount").val();
+        Empmain.ImagePath = $("#ImagePath").val();
+        Empmain.Phone = $("#Phone").val();
+        Empmain.Email = $("#Email").val();
+        Empmain.Pass = $("#Pass").val();
+        Empmain.City = $("#City").val();
+
+
+        // Getting Table Data from where we will fetch Sales Sub Record
+        // var oTable = $('.tbl').dataTable().fnGetData();
+
+        var table = document.getElementById("myTable")
+        debugger;;
+
+        for (var i = 1; i < table.rows.length - 1; i++) {
+
+
+
+
+            // Set SalesSub individual Value
+            phones.PhoneId = table.rows[i].cells[2].innerHTML.trim();
+            phones.EmpId = Empmain.EmpId;
+            phones.PhoneName = table.rows[i].cells[0].innerHTML.trim();
+            phones.PhoneNumber = table.rows[i].cells[1].innerHTML.trim();
+            // adding to SalesMain.SalesSub List Item
+            Empmain.phones.push(phones);
+            phones = { "PhoneId": "", "EmpId": "", "PhoneName": "", "PhoneNumber": "" };
+
+
+        }
+        // Step 1: Ends Here
+
+        debugger;;
+
+        // Set 2: Ajax Post
+        // Here i have used ajax post for saving/updating information
+        $.ajax({
+            url: '/Emp/Edit',
+            data: JSON.stringify(Empmain),
+            type: 'POST',
+            contentType: 'application/json;',
+            dataType: 'json',
+            success: function (result) {
+
+
+                if (result.Success == "1") {
+                    window.location.href = "/Emp/index";
+                }
+                else {
+                    alert(result.ex);
+                }
+            },
+            error: function (result) {
+
+                alert(result);
+            }
+        });
+
+
+    }
+</script>
+<h2>Edit</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true)
+
+    <fieldset>
+        <legend>Emp</legend>
+
+        @Html.HiddenFor(model => model.EmpId)
+
+        <div class="editor-label">
+            @Html.LabelFor(model => model.EmpName)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.EmpName)
+            @Html.ValidationMessageFor(model => model.EmpName)
+        </div>
+        <div class="editor-label">
+            @Html.LabelFor(model => model.Amount)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.Amount)
+            @Html.ValidationMessageFor(model => model.Amount)
+        </div>
+        <div class="editor-label">
+            @Html.LabelFor(model => model.ImagePath)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.ImagePath)
+            @Html.ValidationMessageFor(model => model.ImagePath)
+        </div>
+      
+       
+        <div class="editor-label">
+            @Html.LabelFor(model => model.Phone)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.Phone)
+            @Html.ValidationMessageFor(model => model.Phone)
+        </div>
+        <div class="editor-label">
+            @Html.LabelFor(model => model.Email)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.Email)
+            @Html.ValidationMessageFor(model => model.Email)
+        </div>
+        <div class="editor-label">
+            @Html.LabelFor(model => model.Pass)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.Pass)
+            @Html.ValidationMessageFor(model => model.Pass)
+        </div>
+        <div class="editor-label">
+            @Html.LabelFor(model => model.City)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.City)
+            @Html.ValidationMessageFor(model => model.City)
+        </div>
+        <div>
+            <table id="myTable">
+                <tr>
+                    <th> Phone Name</th>
+                    <th> Phone Numer</th>
+                </tr>
+                @foreach (var item in Model.phones)
+                {
+                   
+                    
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PhoneName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PhoneNumber)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PhoneId)
+                        </td>
+                        <td>
+                            <input type="button" value="Delete" onclick="DeletePhone(this)" />
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <td>@Html.TextBox("PhoneName") </td>
+                    <td>@Html.TextBox("PhoneNumber")</td>
+                    <td><input type="button" value="Add Phone" onclick="AddPhone()" /></td>
+
+                </tr>
+            </table>
+        </div>
+        <div>
+            
+        </div>
+        <p>
+            <input type="button" value="Save" onclick="savedata()" />
+
+        </p>
+    </fieldset>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

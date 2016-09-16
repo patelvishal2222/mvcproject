@@ -1,0 +1,247 @@
+﻿@{
+    ViewBag.Title = "Create";
+}
+<script src="~/Scripts/angular.min.js"></script>
+<script src="~/Scripts/jquery-1.9.1.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<link href="~/Scripts/boostrap.min.css" rel="stylesheet" />
+<script src="~/Scripts/commanAngularScript.js"></script>
+<script>
+   
+    Account.controller('cashreceipt', function ($scope, $location, $http) {
+
+        //variable
+        $scope.finData = {
+            GridCrDrMasterId: 1,
+            TextCrDrMasterId: 2,
+            TextAccountMasterId: 1,
+            ComboBoxGroupMasterId: 0,
+            DisplayName: 'Cash Receipt'
+        };
+        $scope.AddRecord=function()
+        {
+            $scope.finDetail = {};
+            $scope.finDetail.Srno = 0;
+            $scope.finDetail.CrDrMasterId = $scope.finData.GridCrDrMasterId;
+            $scope.modelButton = "Add";
+        }
+        $scope.PushRecord=function()
+        {
+         
+            if( $scope.finDetail.Srno ==0 || $scope.finDetail.Srno==null)
+            {
+                
+                if ($scope.fin.Transcation == null)
+                    $scope.fin.Transcation = [];
+                
+                $scope.finDetail.Srno = $scope.fin.Transcation.length + 1
+                
+                $scope.fin.Transcation.push($scope.finDetail);
+                
+
+            }
+            else
+            {
+                $scope.fin.Transcation[$scope.finDetail.Srno - 1] = $scope.finDetail;
+
+            }
+            $scope.finDetail = {};
+        }
+        $scope.EditRecord=function(transcation)
+        {
+            $scope.finDetail = {};
+            $scope.modelButton = "Edit";
+            $scope.finDetail = angular.copy(transcation);
+
+        }
+        $scope.DeleteRecord=function(index)
+        {
+            $scope.fin.Transcation.splice(index, 1);
+            for( ;index<$scope.fin.Transcation.length;index++ )
+            {
+                $scope.fin.Transcation[index].Srno=index +1;
+            }
+
+        }
+        $scope.onCategoryChange=function()
+        {
+            $scope.finDetail.AccountMasterId = $scope.finDetail.AccountMaster.AccountMasterId;
+        }
+        $scope.Total=function()
+        {
+            var Total = 0;
+            for (var index = 0; index < $scope.fin.Transcation.length; index++)
+            {
+                Total = Total + $scope.fin.Transcation[index].Amount;
+            }
+            return Total;
+
+        }
+        
+        //AccountMasters
+        var response2 = UrlData($http, '/Account/GetAll', 'post', null, null);
+        response2.then(function (response) {
+            $scope.AccountMasters = response.data;
+            
+        },
+       function (response) {
+           alert('error');
+       });
+        //save
+        $scope.saveFinancial=function()
+        {
+            $scope.finDetail = {};
+            $scope.finDetail.Srno = 0;
+            $scope.finDetail.AccountMasterId = $scope.finData.TextAccountMasterId;
+            $scope.finDetail.CrDrMasterId = $scope.finData.TextCrDrMasterId;
+            $scope.finDetail.Amount = $scope.Total();
+            for (var index = 0; index < $scope.fin.Transcation.length; index++)
+            {
+                if( $scope.fin.Transcation[index].CrDrMasterId== $scope.finData.TextCrDrMasterId)
+                {
+                    $scope.finDetail.Srno = $scope.fin.Transcation[index].Srno;
+                     $scope.fin.Transcation[index]=$scope.finDetail;
+                }
+            }
+            if ($scope.finDetail.Srno == 0)
+            {
+                $scope.finDetail.Srno=$scope.fin.Transcation.length+1
+                $scope.fin.Transcation.push($scope.finDetail);
+            }
+
+            var Data = JSON.stringify($scope.fin);
+            var response = UrlData($http, '/Jv/Save', 'post', null, Data);
+            response.then(function (response) {
+                location.href = "/Financial";
+            },
+         function (response) {
+            alert('error');
+            });
+        }
+        //cancel
+        $scope.cancel=function()
+        {
+            location.href = "/Financial";
+        }
+        //GetData
+        $scope.fin = {};
+        var parmeter = $location.absUrl().split('?')[1];
+        var hash;
+        var hashes = parmeter.split('&');
+        for (var i = 0; i < hashes.length; i++) {
+            hash = hashes[i].split('=');
+            window[hash[0]] = hash[1];
+
+        }
+        
+        var Params = { id: Id };
+        
+        var response = UrlData($http, '/Jv/GetData', 'post', Params, null);
+        
+        response.then(function (response) {
+        
+            $scope.fin = response.data;
+            
+            $scope.fin.TypeMasterId = 3;
+            for ($scope.index = 0; $scope.index < $scope.fin.Transcation.length; $scope.index++) {
+                $scope.fin.Transcation[$scope.index].Srno = $scope.index + 1;
+            }
+           },
+    function (response) {
+        
+        alert('error');
+          });
+    });
+</script>
+<body>
+    <div ng-app="Account" ng-controller="cashreceipt" >
+        <!-- Modal -->
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Cash Receipt</h4>
+                    </div>
+                    <div class="modal-body">
+                      <div>
+                          <label>AccountName </label>
+                          <select name="AccountMasterId"
+                                  class="form-control"
+                                  ng-dropdown required
+                                  data-ng-model="finDetail.AccountMaster"
+                                  ng-options="y.AccountName for (x, y) in AccountMasters track by y.AccountMasterId"
+                                  ng-change="onCategoryChange()"></select>
+                      </div>  
+                        <div class="form-group" >
+                            Amount
+                            <input type="number" ng-model="finDetail.Amount"  />
+                        </div>
+                        <div>
+                            <input type="hidden" ng-model="finDetail.CrDrMasterId"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="PushRecord()">{{modelButton}}</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <h1> {{finData.DisplayName}}</h1>
+        <form name="crForm">
+            <div class="form-group">
+                <label>Bill No</label>
+                <input type="Text" name="BillNo" ng-model="fin.BillNo" />
+            </div>
+            <div class="form-group">
+                <label>
+                    Bill Date
+                </label>
+                <input type="text" name="BillDate" ng-model="fin.BillDate" />
+            </div>
+            <div >
+                <Button type="button" class="btn btn-primary"  data-dismiss="modal" ng-click="AddRecord()" data-toggle="modal" data-target="#myModal" >Add</Button>
+                
+            </div>
+            
+                <div class="table table-responsive">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Srno</th>
+                            <th>CrDrMasterId</th>
+                            <th>AccountMasterId </th>
+                            <th>AccountName </th>
+                            <th>Amount</th>
+                            
+                        </tr>
+                        <tr ng-repeat="transcation in fin.Transcation| filter :{CrDrMasterId:1 }  ">
+                            <td>{{transcation.Srno}}</td>
+                            <td>{{transcation.CrDrMasterId}}</td>
+                            <td>{{transcation.AccountMasterId}}</td>
+                            <td>{{transcation.AccountMaster.AccountName}}</td>
+                            <td>{{transcation.Amount | number :2}}</td>
+                            <td> <input type=button value=Edit ng-click="EditRecord(transcation)" data-toggle="modal" data-target="#myModal" /></td>
+                            <td> <input type=button value=delete ng-click="DeleteRecord($index)" /></td>
+                        </tr>
+                    </table>
+                </div>
+            
+            <div>
+                <label>Total</label>
+                <input type="text" name="Total" ng-model="Total()" />
+            </div>
+            <div>
+                <label>Remarks</label>
+                <textarea name="remarks" ng-model="fin.Remarks" rows ="5" > </textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="saveFinancial()">Save</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal"  ng-click="cancel()" >Cancel</button>
+            </div>
+        </form>
+
+    </div>
+</body>

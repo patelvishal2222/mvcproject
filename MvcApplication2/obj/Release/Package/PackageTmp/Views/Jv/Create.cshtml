@@ -1,0 +1,336 @@
+﻿@{
+    ViewBag.Title = "Create";
+}
+
+<h2>JV Create</h2>
+
+    <script src="~/scripts/jquery-1.9.1.min.js"></script>
+    <script src="~/Scripts/bootstrap-datepicker.js"></script>
+    <link rel="stylesheet" href="~/css/datepicker.css">
+    
+    
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+
+
+
+
+
+
+
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+    <script>
+  var mainApp = angular.module('mainApp', []);
+ 
+  function UrlData($http, Url, Method, Params, Data) {
+
+      //url start
+      var response = $http({
+          url: Url,
+          method: Method,
+          params: Params,
+          data: Data,
+      })
+      return response;
+
+
+  }
+
+
+  mainApp.directive('chintan', function () {
+
+
+      return function (scope, element, attrs) {
+          element.datepicker({
+              inline: true,
+
+              onSelect: function (dateText) {
+                  var modelPath = $(this).attr('ng-model');
+                  putObject(modelPath, scope, dateText);
+                  scope.$apply();
+              }
+          });
+      }
+  })
+  mainApp.controller('jvController', function ($scope, $http) {
+
+	$scope.Jv = {
+	BillNo : "1",
+	BillDate : "16-Aug-2016",
+	Remarks:"Testing Data",
+    Transcation : [
+        {Id:1,Name:'Nimesh',Amount:500,Type:"Dr"},
+        {Id:2,Name:'Rahu',Amount:300,Type:"Cr"},
+        {Id:3,Name:'Cash',Amount:800,Type:"Dr"}
+    ],
+
+               DrTotal: function() {
+                  var studentObject=0;
+
+				   for (var i = 0; i < $scope.Jv.Transcation.length; i++) {
+
+				    if ( $scope.Jv.Transcation[i].Type=="Dr")
+					studentObject =studentObject+ $scope.Jv.Transcation[i].Amount;
+                        }
+
+
+                  return studentObject;
+               },
+			    CrTotal: function() {
+                  var studentObject1=0;
+
+				   for (var i = 0; i < $scope.Jv.Transcation.length; i++) {
+
+				    if ( $scope.Jv.Transcation[i].Type=="Cr")
+
+					studentObject1 =studentObject1+ $scope.Jv.Transcation[i].Amount;
+                        }
+
+
+                  return studentObject1;
+               }
+
+
+
+            };
+			$scope.jvdetail={
+			Id:0,
+			Name:'',
+			Amount:0,
+			Type:"Dr"
+			};
+
+			  $scope.AddEntryJvDetails = function () {
+
+			   $scope.jvdetail = {};
+			   $scope.jvdetail.Id=0;
+			  }
+			 $scope.AddJvDetails = function () {
+
+				$scope.jvdetail.Amount=parseInt($scope.jvdetail.Amount,10);
+				var temp={};
+				temp=$scope.jvdetail;
+
+				if($scope.jvdetail.Id==0 || $scope.jvdetail.Id==null)
+				{
+				$scope.jvdetail.Id=$scope.Jv.Transcation.length+1;
+				temp.Id=$scope.Jv.Transcation.length+1;
+
+				 $scope.Jv.Transcation.push(temp );
+				 }
+				 else
+				 {
+				  //$scope.Jv.Transcation[$scope.jvdetail.Id]=$scope.jvdetail ;
+				  $scope.Jv.Transcation[$scope.jvdetail.Id-1]=temp ;
+				 }
+				 temp={};
+				  $scope.jvdetail = {};
+
+			}
+			  $scope.EditData = function (rec) {
+
+
+$scope.jvdetail.Id = rec.Id;
+$scope.jvdetail.Name = rec.Name;
+$scope.jvdetail.Amount = rec.Amount;
+$scope.jvdetail.Type = rec.Type;
+
+
+
+
+			  }
+			  $scope.DeleteData = function (index) {
+
+
+			      $scope.index = index;
+
+
+
+
+			  }
+			  $scope.comfirmDeleteData = function () {
+
+
+
+
+			      $scope.Jv.Transcation.splice($scope.index, 1);
+
+
+			  }
+
+			  $scope.SaveJv = function () {
+			      
+			      
+			      var Data = JSON.stringify($scope.Jv);
+			      
+			      var response = UrlData($http, 'http://localhost:51579/Jv/Save', 'post', null, Data);
+			      response.then(function (response) {
+			       location.href = '/Jv';
+			      },
+                       function (response) {
+                           alert('error');
+                       });
+			      
+
+			  }
+			  $scope.CancelJv = function () {
+			    
+			      location.href = '/Jv';
+			      
+			  }
+
+});
+
+
+
+    </script>
+
+</head>
+<body>
+
+    
+    <div class="container" ng-app="mainApp" ng-controller="jvController">
+        <div class="row">
+         
+            <form name="jvForm" novalidate class="form-horizontal">
+                <div class="form-group">
+                    <label>Bill No</label>
+                    <input type="text" class="form-control" id="BillNo" placeholder="BillNo" ng-model="Jv.BillNo" required>
+                </div>
+                <div class="form-group">
+                    <label>Bill Date</label>
+                    <input type="text" class="form-control" placeholder="BillDate" ng-model="Jv.BillDate" required chintan>
+                </div>
+            </form>
+            <button class="btn btn-primary" style="float:right;width:80px;" type="button" id="model" data-toggle="modal" data-target="#myModal" ng-click="AddEntryJvDetails()">Add</button>
+        </div>
+        <!-- Trigger the modal with a button -->
+        <!-- Modal -->
+        <!-- Modal confirm -->
+        <div class="modal" id="confirmModal" style="display: none; z-index: 1050;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-body" id="confirmMessage">
+                        Are Sure Delete Record ?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" id="confirmOk" ng-click="comfirmDeleteData()">Yes</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal" id="confirmCancel">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="myModal" role="dialog">
+            <div class="container">
+                <div class="modal-dialog">
+                    <div class="modal-content col-lg-10">
+                        <!-- Modal content-->
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Journal Entry</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label for="inputEmail">
+                                        <i class="glyphicon glyphicon-grain"></i>
+                                        Account
+                                    </label>
+
+                                    <input type="text" class="form-control" id="Account" placeholder="Account" ng-model="jvdetail.Name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Size</label>
+                                    <div class="selectContainer">
+                                        <select class="form-control" name="size" data-ng-model="jvdetail.Type">
+                                            <option value="">(Select Type)</option>
+                                            <option value="Dr">Dr</option>
+                                            <option value="Cr">Cr</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputEmail">Amount</label>
+                                    <div class="input-group">
+                                        
+                                        <input type="text" class="form-control" id="Amount" placeholder="Amount" ng-model="jvdetail.Amount" required ng-pattern="/^(\d)+$/">
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-dismiss="modal" ng-click="AddJvDetails()">Save</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--<div class="form-group">-->
+        <div class="row">
+            <div class="table table-responsive">
+                <table class="table table-bordered">
+                    <tr style="background-color:#428bca">
+                        <th> </th>
+                        <th> Dr/Cr </th>
+                        <th> Description </th>
+                        <th> Debite </th>
+                        <th> Credit </th>
+                        <th> </th>
+                        <th> </th>
+                    </tr>
+
+
+                    <tr ng-repeat="tran in Jv.Transcation">
+
+                        <td>{{tran.Id}}</td>
+                        <td>{{tran.Type}}</td>
+                        <td>{{tran.Name}}</td>
+                        <td>
+                            <div ng-if="tran.Type=='Dr'">
+                                {{tran.Amount}}
+                            </div>
+
+
+                        </td>
+                        <td>
+                            <div ng-if="tran.Type=='Cr'">
+                                {{tran.Amount}}
+                            </div>
+                        </td>
+                        <td> <input type="button" value="Edit" ng-click="EditData(tran)" data-toggle="modal" data-target="#myModal" />  </td>
+                        <td> <input type="button" value="Delete" data-toggle="modal" data-target="#confirmModal" ng-click="DeleteData($index)" />  </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <!--</div>-->
+        <div class="row">
+            <div class="form-group col-lg-6">
+                <label>Amount(Dr)</label>
+                <input type="text" class="form-control" id="Total" placeholder="Total" ng-model="Jv.DrTotal()" required>
+            </div>
+            <div class="form-group col-lg-6">
+                <label>Amount(Cr)</label>
+                <input type="text" class="form-control" id="Total" placeholder="Total" ng-model="Jv.CrTotal()" required>
+            </div>
+            <div class="form-group col-lg-12">
+                <label>Description</label>
+                <textarea name="Remarks" class="form-control" rows="5" ng-model="Jv.Remarks" required></textarea>
+            </div>
+            <div class="footer">
+                <button type="button" class="btn btn-primary" ng-click="SaveJv()" >Save</button>
+                <button type="button" class="btn btn-danger" ng-click="CancelJv()">Cancel</button>
+            </div>
+        </div>
+
+
+        <!--</form>-->
+    </div>
+</body>
+

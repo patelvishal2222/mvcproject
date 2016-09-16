@@ -1,0 +1,59 @@
+﻿@model MvcApplication2.Models.Emp
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<fieldset>
+    <legend>Emp</legend>
+
+    <div class="display-label">
+         @Html.DisplayNameFor(model => model.EmpName)
+    </div>
+    <div class="display-field">
+        @Html.DisplayFor(model => model.EmpName)
+    </div>
+    <div class="display-label">
+        @Html.DisplayNameFor(model => model.Amount)
+    </div>
+    <div class="display-field">
+        @Html.DisplayFor(model => model.Amount)
+    </div>
+    <div class="display-label">
+        @Html.DisplayNameFor(model => model.Phone)
+    </div>
+    <div class="display-field">
+        @Html.DisplayFor(model => model.Phone)
+    </div>
+    <div class="display-label">
+        @Html.DisplayNameFor(model => model.Email)
+    </div>
+    <div class="display-field">
+        @Html.DisplayFor(model => model.Email)
+    </div>
+    <div class="display-label">
+        @Html.DisplayNameFor(model => model.Pass)
+    </div>
+    <div class="display-field">
+        @Html.DisplayFor(model => model.Pass)
+    </div>
+    <div class="display-label">
+        @Html.DisplayNameFor(model => model.City)
+    </div>
+    <div class="display-field">
+        @Html.DisplayFor(model => model.City)
+    </div>
+
+    <div class="display-label">
+        @Html.DisplayNameFor(model => model.ImagePath)
+    </div>
+    <div class="display-field">
+        @Html.DisplayFor(model => model.ImagePath)
+    </div>
+</fieldset>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id=Model.EmpId }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

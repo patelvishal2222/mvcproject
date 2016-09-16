@@ -1,0 +1,140 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<style type="text/css">
+    
+
+.friends {
+  border-collapse: collapse;
+}
+
+.friends th {
+  border-bottom: 1px solid;
+}
+.friends td, .friends th {
+  border-left: 1px solid;
+  padding: 5px 10px;
+}
+.friends td:first-child, .friends th:first-child {
+  border-left: none;
+}
+
+.sortorder:after {
+  content: '\25b2';   // BLACK UP-POINTING TRIANGLE
+}
+.sortorder.reverse:after {
+  content: '\25bc';   // BLACK DOWN-POINTING TRIANGLE
+}
+
+
+</style>
+<script>
+    
+    var mainApp = angular.module('mainApp', []);
+    
+
+    function UrlData($http,Url, Method, Params, Data) {
+
+        //url start
+        var response = $http({
+            url: Url,
+            method: Method,
+            params: Params,
+            data: Data,
+        })
+        return response;
+
+
+    }
+
+
+    mainApp.controller('jvController', function ($scope, $http) {
+     
+        $scope.AccountMasters = {};
+        $scope.AddAccount=function ()
+        {
+            
+            location.href = '/Account/Create?Id=0';
+
+        }
+
+       
+        $scope.DeleteAccount = function (AccountMaster) {
+            
+            var strconfirm = confirm("Are you sure you want to delete?");
+            if (strconfirm == true) {
+                var Params={ id: AccountMaster.AccountMasterId };
+                UrlData($http,'http://localhost:51579/Account/Delete', 'post', Params, null);
+                location.href = '/Account/Index';
+
+              
+            }
+
+        }
+        $scope.EditAccount = function (AccountMaster) {
+            location.href = '/Account/Create?Id='+AccountMaster.AccountMasterId;
+
+        }
+
+        var response = UrlData($http,'http://localhost:51579/Account/GetAll', 'post', null, null);
+            response.then(function (response) {
+            $scope.AccountMasters = response.data;
+            },
+            function (response) {
+            alert('error');
+            });
+
+            $scope.propertyName = 'AccountName';
+            $scope.reverse = true;
+            
+
+            $scope.sortBy = function (propertyName) {
+                $scope.reverse = ($scope.propertyName === propertyName) ? !$scope.reverse : false;
+                $scope.propertyName = propertyName;
+            };
+
+    });
+
+</script>
+<h2>Account Display</h2>
+
+<body>
+    <div class="container" ng-app="mainApp" ng-controller="jvController">
+        <div class="row">
+            <input type="button" class="btnAdd" value=" Add Account" ng-click="AddAccount()" />
+            <label>Search: <input ng-model="search"></label>
+            <div class="table table-responsive">
+                <table class="table table-bordered">
+                    <tr style="background-color:#428bca">
+
+                        <th>
+                            <button ng-click="sortBy('AccountMasterId')">AccountMasterId</button>
+                            <span class="sortorder" ng-show="propertyName === 'AccountMasterId'" ng-class="{reverse: reverse}"></span>
+                         </th>
+                        <th>
+                            <button ng-click="sortBy('AccountName')">AccountName</button>
+                            <span class="sortorder" ng-show="propertyName === 'AccountName'" ng-class="{reverse: reverse}"></span>
+                         </th>
+                        <th>
+                            <button ng-click="sortBy('GroupMaster.GroupName')">Group Name</button>
+                            <span class="sortorder" ng-show="propertyName === 'GroupMaster.GroupName'" ng-class="{reverse: reverse}"></span>
+                        </th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    <tr ng-repeat="AccountMaster in  AccountMasters| filter:search |orderBy :propertyName:reverse">
+                        <td>{{AccountMaster.AccountMasterId}}</td>
+                        <td>{{AccountMaster.AccountName}}</td>
+                        <td>{{AccountMaster.GroupMaster.GroupName}}</td>
+                        <td><button ng-click="EditAccount(AccountMaster)">Edit</button></td>
+                        <td><button ng-click="DeleteAccount(AccountMaster)">Delete</button></td>
+                    </tr>
+
+                </table>
+                </div>
+            </div>
+      </div>
+</body>

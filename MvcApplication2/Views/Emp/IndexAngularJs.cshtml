@@ -1,0 +1,96 @@
+﻿<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script src="~/Scripts/angular.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+
+<div ng-app="myApp" ng-controller="myCntrl">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+    <h1> Employee Details Page</h1>
+
+    <br />
+
+    <input type="button" class="btnAdd" value=" Add Employee" ng-click="AddEmployeeDiv()" />
+
+    <div class="divList">
+        <div>
+            Search Text <input type="text" ng-model="Search" />
+        </div>
+        <p class="divHead">Employee List</p>
+        <table cellpadding="12" class="table table-bordered table-hover">
+            <tr>
+                <td><b>EmpId</b></td>
+                <td><b>EmpName</b></td>
+                <td><b>Amount</b></td>
+                <td><b>ImagePath</b></td>
+                <td><b>Actions</b></td>
+            </tr>
+            <tr ng-repeat="Emp in Empes  | filter: Search">
+                <td>
+                    {{Emp.EmpId}}
+                </td>
+                <td>
+                    {{Emp.EmpName}}
+                </td>
+                <td>
+                    {{Emp.Amount}}
+                </td>
+                <td>
+                    {{Emp.ImagePath}}
+                </td>
+                <td>
+                    <span ng-click="editEmployee(Emp)" class="btnAdd">Edit</span>
+                    <span ng-click="deleteEmployee(Emp)" class="btnRed">Delete</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+        <div ng-show="divEmployee">
+
+
+
+            <p class="divHead">{{Action}} Employee</p>
+            <table>
+                <tr>
+                    <td><b>Id</b></td>
+                    <td>
+                        <input type="text" disabled="disabled" ng-model="EmpId" />
+                    </td>
+                </tr>
+                <tr>
+                    <td><b>Name</b></td>
+                    <td>
+                        <input type="text" ng-model="EmpName" />
+                    </td>
+                </tr>
+                <tr>
+                    <td><b>Amount</b></td>
+                    <td>
+                        <input type="text" ng-model="Amount" />
+                    </td>
+                </tr>
+                <tr>
+                    <td><b>ImagePath</b></td>
+                    <td>
+                        <input type="text" ng-model="ImagePath" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input type="button" class="btnAdd" value="Save" ng-click="AddUpdateEmployee()" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    
+</div>
+
+
+        <script src="~/Content/Angular/Module.js"></script>
+
+<script src="~/Content/Angular/Controller.js"></script>
+<script src="~/Content/Angular/Service.js"></script>
+

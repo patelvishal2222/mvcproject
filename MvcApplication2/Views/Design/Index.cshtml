@@ -1,0 +1,181 @@
+﻿
+
+
+    <script src="~/Scripts/angular.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<link href="~/Scripts/boostrap.min.css" rel="stylesheet" />
+<link href="~/Scripts/object-table-style.css" rel="stylesheet" />
+<script src="~/Scripts/object-table.js"></script>
+    <script>
+        var app = angular.module('app', ['objectTable']);
+
+function UrlData($http, Url, Method, Params, Data) {
+
+    //url start
+    var response = $http({
+        url: Url,
+        method: Method,
+        params: Params,
+        data: Data,
+    })
+    return response;
+
+
+}
+
+
+app.controller('dyamic', function($scope, $http){
+
+
+	$scope.formFields = [
+    {
+        name: 'BillNo',
+        type: 'text'
+    },
+    {
+        name: 'Date',
+        type: 'text'
+    },
+	{
+	name :'City',
+	type:'comBobox',
+	value :[
+	        {name:'Ahmedbad'},
+			{name:'Nadid'},
+			{name:'Anand'}
+			]
+	},
+	{
+	name:'',
+	type:'table',
+	Columns :[ {name:'Srno'},
+				{name:'AccountName'},
+				{name:'Amount'}
+			]
+
+
+
+	}
+	,
+    {
+        name: 'Amount',
+        type: 'text'
+    },
+
+	{
+	   name:'Description',
+	   type:'textarea',
+	   row:20
+	}
+	];
+	
+	
+	$http.get('http://localhost:51579/FormData/Form.js').success(function (data) {
+	    
+	    $scope.formFields = data.data;
+	})
+    
+	
+
+$scope.AddRecord=function ()
+{
+alert('addRecord');
+
+}
+
+var response = UrlData($http, '/Account/GetAll', 'post', null, null);
+response.then(function (response) {
+    $scope.AccountMasters = response.data;
+},
+function (response) {
+    alert('error');
+});
+
+
+});
+
+
+
+
+
+
+
+
+    </script>
+
+<body>
+
+    <div ng-app="app" ng-controller="dyamic">
+        <div>
+            <table object-table
+                   data="AccountMasters"
+                   headers="AccountMasterId,AccountName,GroupMasterId,Amount"
+                   fields="AccountMasterId,AccountName,GroupMasterId,Amount"
+                   resize="true"
+                   display="7"
+                   drag-columns="true">
+                <tfoot>
+                    <tr>
+                        <td>Test </td>
+                        <td> count: {{$filtered.length}}</td>
+
+                    </tr>
+                </tfoot>
+
+            </table>
+        </div>
+
+        <form name="myForm">
+            <div class="form-group" ng-repeat="field in formFields">
+                {{field.name}}
+                <div ng-if="field.type=='text'  || field.type=='email' || field.type=='password'">
+
+                    <input class="form-control"
+                           dynamic-name="field.name"
+                           type="{{ field.type }}"
+                           placeholder="{{ field.name }}"
+                           ng-model="field.value"
+                           required />
+
+                </div>
+                <div ng-if="field.type=='checkbox'">
+                    <input ng-repeat="choice in field.choices"
+                           type="checkbox"
+                           dynamic-name="field.name"
+                           ng-value="choice.name" />
+
+                </div>
+                <div ng-if="field.type=='textarea'">
+
+                    <textarea row="50"></textarea>
+                </div>
+                <div ng-if="field.type=='comBobox'">
+
+                    <select>
+                        <option ng-repeat="v in field.value" value={{v.name}}>{{v.name}}</option>
+                    </select>
+                </div>
+                <div ng-if="field.type=='table'">
+                    <div>
+                        <button ng-click="AddRecord()">Add</button>
+                    </div>
+                    <div>
+                        <table border="1">
+                            <tr>
+                                <th ng-repeat="col  in field.Columns">{{col.name}} </th>
+                                <th> </th>
+                                <th> </th>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button ng-disabled="myForm.$invalid">Submit</button>
+            </div>
+        </form>
+
+    </div>
+
+</body>
+

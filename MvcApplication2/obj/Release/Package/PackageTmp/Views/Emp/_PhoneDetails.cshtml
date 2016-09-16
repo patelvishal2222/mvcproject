@@ -1,0 +1,39 @@
+﻿@model IEnumerable<MvcApplication2.Models.Phone>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.EmpId)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.PhoneName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.PhoneNumber)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.EmpId)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.PhoneName)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.PhoneNumber)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.PhoneId }) |
+            @Html.ActionLink("Details", "Details", new { id=item.PhoneId }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.PhoneId })
+        </td>
+    </tr>
+}
+
+</table>
